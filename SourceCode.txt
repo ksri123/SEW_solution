@@ -1,0 +1,159 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.IO;
+
+namespace LongestWordFromWords
+{
+    class Program
+    {
+        // Function to Convert Text file to a List
+        public static List<string> ConvertFileToListofwords()
+        {
+            List<string> listOfWords = new List<string>();
+            string line;
+            int count = 0;
+            try
+            {
+                StreamReader sr = new StreamReader(@"inputfile.txt");
+                line = sr.ReadLine();
+                while (line != null)
+                {
+                    listOfWords.Add(line);
+                    line = sr.ReadLine();
+                    count++;
+                }
+                sr.Close();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception: " + e.Message);
+            }
+            finally
+            {
+
+            }
+            return listOfWords;
+        }
+
+        // Function to find all construsted words from other sub words and retrun a dictiory
+        public static Dictionary<string, string> FindLongestWords(List<string> listOfWords)
+
+        {
+            Dictionary<string, string> listofMasterwords = new Dictionary<string, string>();
+
+            if (listOfWords == null)
+            {
+                throw new ArgumentException("listOfWords");
+            }
+            var sortedWords = listOfWords.OrderByDescending(word => word.Length);
+            var dict = new HashSet<String>(sortedWords);
+            int i = 0;
+            foreach (var word in sortedWords)
+            {
+                string subwords = isMadeOfWords(word, dict);
+                if (subwords != null)
+                {
+                    //Remove single words
+                    if (subwords.Contains(":"))
+                    {
+                        listofMasterwords.Add(word, subwords);
+                    }
+
+                }
+            }
+            return listofMasterwords;
+        }
+
+        private static string isMadeOfWords(string word, HashSet<string> dict)
+        {
+            if (String.IsNullOrEmpty(word))
+            {
+                return null;
+            }
+            if (word.Length == 1)
+            {
+                if (dict.Contains(word))
+                    return word;
+                else
+                    return null;
+            }
+            foreach (var pair in generatePairs(word))
+            {
+                if (dict.Contains(pair.Item1))
+                {
+                    if (dict.Contains(pair.Item2))
+                    {
+                        return pair.Item1 + ":" + pair.Item2;
+                    }
+                    else
+                    {
+                        string subwords = isMadeOfWords(pair.Item2, dict);
+                        if (subwords != null)
+                        {
+                            return pair.Item1 + ":" + subwords;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        private static List<Tuple<string, string>> generatePairs(string word)
+        {
+            var output = new List<Tuple<string, string>>();
+            for (int i = 1; i < word.Length; i++)
+            {
+                output.Add(Tuple.Create(word.Substring(0, i), word.Substring(i)));
+            }
+            return output;
+        }
+
+        public static void Main(string[] args)
+        {
+            // Convert File words to List of Words
+            List<string> listOfWords = ConvertFileToListofwords();
+            // Find List of constructed words which has other sub words
+            Dictionary<string, string> masterwords = FindLongestWords(listOfWords);
+            Console.WriteLine("SEW:SMART ENERGY WATER Problem Solution:");
+            Console.WriteLine("===============================================================");
+
+
+            if (masterwords.Count != 0)
+            {
+
+                int count = 1;
+                foreach (KeyValuePair<string, string> word in masterwords)
+                {
+
+                    if (count == 1)
+                    {
+                        Console.WriteLine("FirstLongestword              :" + word.Key);
+                    }
+
+                    if (count == 2)
+                    {
+                        Console.WriteLine("SecondLongestword             :" + word.Key);
+                    }
+                    count++;
+                }
+                Console.WriteLine("Number Of ConstructedWords    :" + masterwords.Count);
+                Console.WriteLine("===============================================================");
+            }
+            else
+            {
+                Console.WriteLine("There are no constructed words");
+
+            }
+            Console.ReadLine();
+
+        }
+    }
+
+}
